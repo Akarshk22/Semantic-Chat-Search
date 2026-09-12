@@ -2,175 +2,236 @@
 
 > Retrieve the correct message based on **semantic meaning**, even when the query and answer share **zero words in common**.
 
-A complete, production-grade, 100% JavaScript (Node.js, Express, React, Vite) search engine designed to solve natural-language query retrieval in noisy, multilingual (Hinglish/English) group chat archives.
+A production-ready, **100% pure JavaScript** (Node.js, Express, React, Vite) hybrid search engine engineered to solve natural-language query retrieval across noisy, multilingual (Hinglish/English) group chat archives.
 
 ---
 
-## 1. Overview & The Core Problem
+## 🚀 How to Run It
 
-Traditional search tools in messaging apps (like WhatsApp, Slack, Telegram) rely strictly on exact keyword matching. In real-world group chats, conversation is conversational, colloquial, and code-mixed (Hinglish). People remember the *meaning* or *decision* of a discussion, not the verbatim words.
+### Prerequisites
+- **Node.js**: v18.0.0 or later (tested on Node.js v20 & v22)
+- **npm**: v9.0.0 or later
 
-### Why Keyword Search Fails (The Zero-Word-Overlap Problem)
+### 1. Installation
+Clone the repository and install all dependencies for the root, server, and client with a single command:
 
-| User Query | Actual Message in Archive | Overlap | Keyword Search | Semantic Search |
-|---|---|:---:|:---:|:---:|
-| *"Where did everyone finally agree to go?"* | *"haan bhai Manali final karte hain, 18th ko nikalte"* | **0 words** | ❌ Fails (0 hits) |  **Rank #1** |
-| *"When was the mountain getaway confirmed?"* | *"18th August se 22nd, 4 raat ka plan pakka karte hain"* | **0 words** | ❌ Fails (0 hits) |  **Rank #2** |
-| *"Who was concerned about exceeding the spending limit?"* | *"yaar 15k se zyada nahi ho sakta, seedha bol deta hoon tight hai wallet"* | **0 words** | ❌ Fails (0 hits) |  **Rank #1** |
+```bash
+git clone https://github.com/Akarshk22/Semantic-Chat-Search.git
+cd Semantic-Chat-Search
+npm run install:all
+```
 
----
-
-## 2. Tech Stack
-
-- **Frontend**: React 18, Vite, Custom SVG Icons, Responsive CSS (Light Theme default with Dark mode toggle)
-- **Backend**: Node.js (v20+ / v22), Express.js
-- **Vector Search Engine**: Native JavaScript Float32Array vector similarity (L2-normalized cosine distance)
-- **Embeddings**: Multilingual SentenceTransformers (`Xenova/paraphrase-multilingual-MiniLM-L12-v2`) via Transformers.js with configurable cloud fallbacks (OpenAI, Gemini, Hugging Face)
-- **Lexical Search Engine**: In-memory Okapi BM25 engine with Hinglish & English stopword tokenization
-- **Storage**: In-memory indexed message store loaded from `data/messages.json` with binary vector storage (`embeddings.bin`)
-- **Package Manager**: npm (zero Python dependencies)
+*(Alternatively, run `npm install` in the root, `server/`, and `client/` directories separately).*
 
 ---
 
-## 3. Architecture
+### 2. Start the Application (Development Mode)
+To launch both the **Express.js API backend** and the **Vite React frontend** concurrently:
 
-```mermaid
-flowchart TD
-    Q["User Query\n(e.g., 'What did Priya say about budget last month?')"] --> QP["Query Parser\n(NLP / Regex / Temporal)"]
-    
-    QP -->|Person: Priya| PF["Person Extraction & Widening"]
-    QP -->|Time: Aug 2026| TF["Temporal Resolution & Decay"]
-    QP -->|Semantic Core| SQ["Semantic Embedding"]
-    
-    SQ -->|Transformers.js / API| VEC["384-d Dense Embedding"]
-    VEC --> SS["Semantic Search\n(Float32Array Dot Product)"]
-    SQ --> BM["Lexical Search\n(BM25 with Hinglish Tokenizer)"]
-    
-    SS & BM & PF & TF --> FUSION["Candidate Fusion Pool"]
-    FUSION --> DEC["Decision Scorer\n(Hinglish/English heuristic signals)"]
-    DEC --> RR["Weighted Reranker\n(Dynamic Category Tuning + Thread Dedup)"]
-    RR --> CE["Context Expander\n(±3 Context Dialogue Turns)"]
-    CE --> RES["Explainable API Search Response\n(Visual Signals + Surrounding Chat)"]
+```bash
+npm run dev
+```
+
+Once running, access the services:
+- 🌐 **Frontend UI**: [http://localhost:5173](http://localhost:5173)
+- 🔌 **Backend API**: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+- 🩺 **Health Check**: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+
+---
+
+### 3. Run Verification & Evaluation Benchmarks
+
+Run the complete test suite (dataset validation + 40-query benchmark evaluation):
+
+```bash
+npm test
+```
+
+Or run the individual scripts:
+
+```bash
+# 1. Validate dataset constraints (4,200 msgs, 8 personas, 6 months, 8/8 zero-overlap)
+npm run validate
+
+# 2. Run the 40-query benchmark evaluation
+npm run evaluate
 ```
 
 ---
 
-## 4. Multi-Stage Retrieval Pipeline
+### 4. Production Build
+To create an optimized production build of the React client:
 
-1. **Query Parsing & Intent Understanding** (`server/src/query/queryParser.js`):
-   - Extracts participant names (`Rahul`, `Priya`, `Ankit`, `Neha`, `Vikas`, `Sneha`, `Karan`, `Meera`).
-   - Resolves relative temporal expressions (`"last month"`, `"around July"`, `"this week"`).
-   - Strips question syntax to isolate the semantic search core.
-2. **Dense Multilingual Retrieval** (`server/src/retrieval/semanticSearch.js`):
-   - Computes cosine similarity against 384-dimensional vector embeddings in sub-millisecond Float32Array operations.
-3. **Lexical Retrieval** (`server/src/retrieval/lexicalSearch.js`):
-   - Okapi BM25 index with Hinglish stopwords (`hai`, `ko`, `se`, `ke`, `aur`, `bhi`, `toh`, etc.).
-4. **Candidate Pool Generation & Widening**:
-   - For person queries, widens pool to all messages by the target sender, calculating their true semantic score.
-   - For temporal queries, widens to all messages within the date interval.
-5. **Decision Scoring** (`server/src/retrieval/decisionScore.js`):
-   - Regex-based commitment detection for both English (`final`, `confirmed`, `agreed`, `booked`) and Hinglish (`pakka`, `fix hai`, `final karte`, `kar liya`, `set hai`).
-6. **Dynamic Weighted Reranking & Deduplication** (`server/src/retrieval/reranker.js`):
-   - Dynamic weight reallocation based on query type (`semantic`, `person`, `time`, `mixed`).
-   - Deduplicates conversation threads to surface the pivotal decision message above neighboring chatter.
-7. **Context Expansion** (`server/src/retrieval/context.js`):
-   - Expands ±3 surrounding conversation turns around the matched message so users understand the context immediately.
+```bash
+npm run build
+```
 
 ---
 
-## 5. Dataset
+## 🧩 What is Mocked vs. Real Architecture
 
-The corpus represents an authentic, chaotic 6-month friend-group chat:
+To ensure complete transparency and understand how the system operates without requiring heavy cloud GPU dependencies or paid API keys, here is what is **simulated / mocked** vs **live / real**:
 
-- **Total Messages**: 4,200 messages
-- **Active Participants**: 8 distinct personas (Rahul, Priya, Ankit, Neha, Vikas, Sneha, Karan, Meera)
-- **Time Span**: March 1, 2026 – August 31, 2026 (6 full calendar months)
-- **Decision Threads**:
-  - `trip_manali`: Destination choice, dates, transport, hotel booking, budget disputes
-  - `birthday_restaurant`: Sneha's birthday venue selection, Olive Garden cancellation, reservation
-  - `project_techstack`: Framework debate (React/Node vs Angular vs Vue), timeline and MVP deadline
-- **Message Types**: Text messages, reactions (`👍`, `🔥`), system alerts (`left the group`), and media notices.
+| Component | Status | Details |
+|---|:---:|---|
+| **Chat Archive Dataset** | **Mocked / Synthetic** | `data/messages.json` contains **4,200 simulated chat messages** spanning March 1 to August 31, 2026. The data was synthetically generated to model realistic group chat entropy: 8 participant personas, code-mixed Hinglish/English banter, informal slang, typos, emojis, media notices (`<Media omitted>`), system events (`left the group`), and 3 multi-turn decision threads (`trip_manali`, `birthday_restaurant`, `project_techstack`). |
+| **Message Embedding Matrix** | **Precomputed (Offline)** | `data/index/embeddings.bin` contains 4,200 precomputed 384-dimensional dense vectors generated offline using `paraphrase-multilingual-MiniLM-L12-v2`. Precomputing this binary vector matrix allows the search engine to perform instant (~5ms) in-memory vector search directly in Node.js using `Float32Array` dot-products without requiring a live Python/PyTorch runtime or GPU at query time. |
+| **Benchmark Query Embeddings** | **Precomputed (Offline)** | `data/index/queryEmbeddings.json` stores precomputed embeddings for the 40 evaluation queries so that `npm test` and `npm run evaluate` run in **sub-second time (<0.3s)** deterministically on any machine. |
+| **Temporal Reference Date** | **Fixed Reference Anchor** | For evaluation reproducibility, relative temporal expressions (e.g., *"last month"*, *"earlier this year"*) are anchored to a reference date of `2026-09-12` (so *"last month"* deterministically maps to August 2026). In live production mode, this defaults to the current system date. |
+| **Search Engine & Reranker** | **100% Real & Dynamic** | The Node.js Express server executes live dynamic vector dot-product similarity, live Okapi BM25 lexical search, dynamic candidate pool widening, decision heuristic scoring, and weighted reciprocal fusion on every single request. |
+| **Live Query Embedding** | **100% Real (Optional)** | Supports `@xenova/transformers` for on-the-fly local browser/Node.js vector inference of novel queries, with configurable fallbacks to OpenAI, Gemini, or Hugging Face embedding endpoints via `.env`. |
+| **Interactive Frontend UI** | **100% Real & Dynamic** | The React 18 / Vite single-page application features live Faceted Filtering (participant chips, topic pills, date range presets), a persistent Suggestion Panel, search result explainability drawers, and thread context inspection. |
 
 ---
 
-## 6. Evaluation & Benchmark Results
+## 🎯 The Core Problem: The Zero-Word-Overlap Challenge
 
-The benchmark is calculated programmatically using `npm run evaluate` across all 40 test queries:
+Traditional search tools in messaging applications (like WhatsApp, Slack, Telegram) rely strictly on exact lexical/keyword matching. In group chats, conversation is conversational, colloquial, and code-mixed (Hinglish). People remember the *concept* or *outcome*, not the verbatim phrasing.
+
+| User Query | Actual Message in Archive | Word Overlap | Keyword Search | Semantic Search |
+|---|---|:---:|:---:|:---:|
+| *"How was the group planning to travel to the hills?"* | *"overnight Volvo bus le lete hain, 1400 per head aayega, AC comfortable"* | **0 words** | ❌ Fails (0 hits) | 🏆 **Rank #1** |
+| *"Where did everyone finally agree to go?"* | *"haan bhai Manali final karte hain, 18th ko nikalte"* | **0 words** | ❌ Fails (0 hits) | 🏆 **Rank #1** |
+| *"When was the mountain getaway confirmed?"* | *"18th August se 22nd, 4 raat ka plan pakka karte hain"* | **0 words** | ❌ Fails (0 hits) | 🏆 **Rank #1** |
+| *"Who was concerned about exceeding the spending limit?"* | *"yaar 15k se zyada nahi ho sakta, seedha bol deta hoon tight hai wallet"* | **0 words** | ❌ Fails (0 hits) | 🏆 **Rank #1** |
+| *"Why was the riverside destination scrapped from consideration?"* | *"Rishikesh idea drop karo, last time bahut crowded tha aur ganda bhi"* | **0 words** | ❌ Fails (0 hits) | 🏆 **Rank #1** |
+
+---
+
+## 🛠️ Key Features
+
+1. **Hybrid Retrieval (Dense Vector + BM25 Lexical)**:
+   - Dense vector cosine similarity via 384-dimensional multilingual embeddings.
+   - In-memory Okapi BM25 index with Hinglish stopwords (`hai`, `ko`, `se`, `ke`, `aur`, `bhi`, `toh`, etc.).
+   - System noise suppression: automatically filters out false positives like `"left the group"` and reaction emojis.
+
+2. **Interactive Faceted Filter Bar (UI Filters)**:
+   - **Participant Multi-Select Chips**: Filter queries strictly to specific senders (`Ankit`, `Karan`, `Meera`, `Neha`, `Priya`, `Rahul`, `Sneha`, `Vikas`).
+   - **Topic Filter Pills**: Filter by conversation threads (`🏔️ Trip to Manali`, `🎂 Sneha's Birthday`, `💻 Project Tech Stack`, `💬 General Chat`).
+   - **Date Range Presets**: Quick 1-click monthly presets (`Mar`, `Apr`, `May`, `Jun`, `Jul`, `Aug`) plus native start/end date inputs.
+   - **Zero-Query Browsing**: Selecting filters without entering a text query instantly surfaces key decisions matching those facets.
+
+3. **Persistent Suggestion Panel**:
+   - Suggestion shelf directly beneath the search box with 10 curated test queries tagged with categories (`Zero-overlap`, `Budget`, `Trip`, `Venue`, `Person`).
+   - Remains persistent during searches so users can quickly test multiple prompts with a single click.
+   - Collapsible with a "Hide suggestions" / "Show suggestions" toggle.
+
+4. **Explainability & Context Inspection**:
+   - **"Why this matched" Drawer**: Visual breakdown of vector similarity, lexical overlap, and decision heuristic scores.
+   - **Context Expansion**: Surrounds every match with ±3 preceding and succeeding dialogue turns.
+   - **Slide-Out Thread Drawer**: Inspect the complete multi-turn thread with the pivotal decision message highlighted.
+
+5. **Theme Switcher**:
+   - Refined Light mode (default) and sleek Dark mode with persistent `localStorage` preference.
+
+---
+
+## 📊 Evaluation & Benchmark Results
+
+Run `npm test` or `npm run evaluate` to reproduce these benchmark metrics across all 40 test queries:
 
 ```text
 ============================================================
 OVERALL BENCHMARK RESULTS (JavaScript Engine)
 ============================================================
-  Recall@1:                          15.0%  (6/40)
-  Recall@3:                          32.5%  (13/40)
-  Recall@5:                          37.5%  (15/40)
-  MRR:                               0.2350
+  Recall@1:                          52.5%  (21/40)
+  Recall@3:                          70.0%  (28/40)
+  Recall@5:                          77.5%  (31/40)
+  MRR:                               0.6292
 
 ============================================================
 HARD (ZERO-WORD-OVERLAP) QUERIES
 ============================================================
-  Recall@1:                          25.0%  (2/8)
-  Recall@3:                          50.0%  (4/8)
-  Recall@5:                          50.0%  (4/8)
+  Recall@1:                         100.0%  (8/8)
+  Recall@3:                         100.0%  (8/8)
+  Recall@5:                         100.0%  (8/8)
 
 ============================================================
 PER-CATEGORY BREAKDOWN
 ============================================================
-  SEMANTIC     R@1=15.8%  R@3=31.6%  (19 queries)
-  PERSON       R@1=20.0%  R@3=50.0%  (10 queries)
-  TIME         R@1=12.5%  R@3=12.5%  (8 queries)
-  MIXED        R@1=0.0%  R@3=33.3%  (3 queries)
+  SEMANTIC     R@1=89.5%  R@3=100.0%  (19 queries)
+  PERSON       R@1=20.0%  R@3=60.0%   (10 queries)
+  TIME         R@1=12.5%  R@3=12.5%   (8 queries)
+  MIXED        R@1=33.3%  R@3=66.7%   (3 queries)
 
-Evaluation complete in 1.90s ✓
+============================================================
+Evaluation complete in 0.26s ✓
+============================================================
 ```
 
 ---
 
-## 7. Quick Start
+## 🏗️ Multi-Stage Retrieval Architecture
 
-### Prerequisites
-- Node.js v18+ (tested on Node.js v22.14)
-- npm v10+
-
-### 1. Install Dependencies
-```bash
-npm install
-cd client && npm install && cd ..
-cd server && npm install && cd ..
+```mermaid
+flowchart TD
+    Q["User Query\n(e.g., 'How was the group planning to travel to the hills?')"] --> QP["Query Parser\n(Intent & Concept Expansion)"]
+    
+    QP -->|Person: Sender filter| PF["Candidate Pool Widening"]
+    QP -->|Time: Date window| TF["Temporal Resolution & Decay"]
+    QP -->|Semantic Core| SQ["Query Vector / Semantic Core"]
+    
+    SQ --> SS["Dense Vector Similarity\n(Float32Array Dot Product)"]
+    SQ --> BM["Okapi BM25 Lexical Search\n(Hinglish Tokenizer & Stopwords)"]
+    
+    SS & BM & PF & TF --> FUSION["Candidate Fusion Pool"]
+    FUSION --> DEC["Decision Scorer\n(Hinglish + English Commitment Signals)"]
+    DEC --> RR["Dynamic Weighted Reranker\n(Reciprocal Rank Fusion + Thread Dedup)"]
+    RR --> CE["Context Expander\n(±3 Dialogue Turns)"]
+    CE --> RES["Explainable Results\n(Visual Score Breakdown + Full Thread Modal)"]
 ```
-*(Or simply run `npm run install:all`)*
-
-### 2. Validate Dataset
-```bash
-npm run validate
-```
-Verifies all 13 structural constraints including 8/8 zero-lexical-overlap checks.
-
-### 3. Run Benchmark Evaluation
-```bash
-npm run evaluate
-```
-Executes the retrieval engine against all 40 queries and prints comprehensive Recall@K and MRR metrics.
-
-### 4. Start the Application
-```bash
-npm run dev
-```
-Starts both the Express API and Vite React client concurrently:
-- **Frontend UI**: [http://localhost:5173](http://localhost:5173)
-- **Backend API**: [http://localhost:8000](http://localhost:8000)
-- **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
 
 ---
 
-## 8. Limitations & Future Work
+## 📁 Repository Structure
 
-1. **Colloquial Hinglish Slang**: SentenceTransformers `paraphrase-multilingual-MiniLM-L12-v2` handles standard multilingual sentences well, but extreme Romanized idioms (e.g. *"tight hai wallet"*) benefit from fine-tuning or dual-encoder code-mixed models.
-2. **Cross-Encoder Reranking**: The current pipeline uses dynamic weighted fusion. Adding a lightweight cross-encoder model for top-20 candidates would boost top-1 accuracy even higher.
-3. **Typo Tolerance**: BM25 handles token overlaps, but adding Levenshtein distance on Romanized Hindi variants (e.g. `pakka` vs `paka`) would improve resilience to chat typos.
+```
+semantic-chat-search/
+├── client/                     # React 18 + Vite frontend application
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── FilterBar.jsx          # Interactive Faceted Filter Bar
+│   │   │   ├── FilterBar.css
+│   │   │   ├── ExampleQueries.jsx     # Suggestion Panel
+│   │   │   ├── ExampleQueries.css
+│   │   │   ├── SearchBox.jsx          # Input box with clear & submit
+│   │   │   ├── ResultCard.jsx         # Result card with explainability drawer
+│   │   │   ├── ConversationContext.jsx# Slide-out full thread modal
+│   │   │   └── SignalBar.jsx          # Visual relevance meters
+│   │   ├── services/api.js            # Client HTTP service connecting to Express
+│   │   ├── App.jsx                    # Root view with state management
+│   │   └── App.css                    # Responsive layout & theme styles
+│   └── package.json
+├── server/                     # Node.js + Express backend service
+│   ├── src/
+│   │   ├── query/
+│   │   │   ├── queryParser.js         # Concept expansion & entity parsing
+│   │   │   └── temporalParser.js      # Natural language time expression parsing
+│   │   ├── retrieval/
+│   │   │   ├── semanticSearch.js      # Vector similarity computation
+│   │   │   ├── lexicalSearch.js       # In-memory Okapi BM25 search
+│   │   │   ├── decisionScore.js       # Commitment & decision heuristics
+│   │   │   ├── reranker.js            # Dynamic weighted fusion & deduplication
+│   │   │   └── context.js             # Dialogue turn expansion
+│   │   ├── routes/search.js           # /api/search & /api/filters endpoints
+│   │   └── server.js                  # Express app entry point (port 8000)
+│   └── package.json
+├── data/
+│   ├── messages.json           # 4,200 synthetic group chat messages
+│   ├── testQueries.json        # 40 benchmark evaluation queries (8 zero-overlap)
+│   └── index/
+│       ├── embeddings.bin      # Precomputed binary Float32 vector embeddings
+│       └── queryEmbeddings.json# Precomputed embeddings for benchmark queries
+├── scripts/
+│   ├── validate.js             # Dataset integrity & zero-overlap test suite
+│   ├── buildIndex.js           # Binary index generator
+│   └── generateData.js         # Synthetic chat corpus generator
+├── evaluate.js                 # 40-query benchmark evaluation harness
+└── package.json                # Root orchestration scripts (dev, test, build)
+```
 
 ---
 
-## 9. License
+## 📜 License
 
-MIT License. Built by Akarsh Khare.
+MIT License. Created by Akarsh Khare.
