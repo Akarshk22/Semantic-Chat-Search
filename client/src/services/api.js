@@ -2,11 +2,11 @@
  * Client API service for search and thread retrieval.
  */
 
-export async function searchArchive(query, topK = 5) {
+export async function searchArchive(query, topK = 5, filters = {}) {
   const res = await fetch('/api/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, top_k: topK, topK }),
+    body: JSON.stringify({ query, top_k: topK, topK, filters }),
   });
 
   if (!res.ok) {
@@ -14,6 +14,14 @@ export async function searchArchive(query, topK = 5) {
     throw new Error(err.detail || `Search failed with status ${res.status}`);
   }
 
+  return res.json();
+}
+
+export async function fetchFilterMeta() {
+  const res = await fetch('/api/filters');
+  if (!res.ok) {
+    throw new Error(`Failed to load filter metadata with status ${res.status}`);
+  }
   return res.json();
 }
 

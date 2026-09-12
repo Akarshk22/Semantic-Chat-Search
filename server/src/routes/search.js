@@ -9,11 +9,23 @@ router.post('/search', async (req, res) => {
   const t0 = performance.now();
 
   try {
-    const { query, topK = 5, top_k } = req.body;
+    const { query = '', topK = 5, top_k, filters = {} } = req.body;
     const finalTopK = topK || top_k || 5;
 
-    if (!query || typeof query !== 'string' || !query.trim()) {
-      return res.status(400).json({ detail: 'Query parameter is required' });
+    const {
+      participants = [],
+      startDate = null,
+      endDate = null,
+      conversationId = null
+    } = filters || {};
+
+    const hasFilters = (Array.isArray(participants) && participants.length > 0) ||
+      Boolean(startDate) || Boolean(endDate) || (conversationId && conversationId !== 'all');
+
+    const effectiveQuery = (query && typeof query === 'string' && query.trim()) ? query.trim() : '';
+
+    if (!effectiveQuery && !hasFilters) {
+      return res.status(400).json({ detail: 'Query parameter or filter criteria is required' });
     }
 
     const svc = IndexService.get();
@@ -21,45 +33,53 @@ router.post('/search', async (req, res) => {
       await svc.load();
     }
 
-    // 1. Query Parsing
-    const parsed = parseQuery(query, config.referenceDate);
-    const { person, timeRange, semanticQuery, queryType } = parsed;
+    // 1. Faceted filter predicates
+    const selectedParticipants = Array.isArray(participants) && participants.length > 0
+      ? new Set(participants.map(p => p.toLowerCase()))
+      : null;
 
-    // 2. Query Embedding
-    const queryVector = await svc.embedQuery(semanticQuery);
+    const filterStartMs = startDate ? new Date(startDate).getTime() : null;
+    const filterEndMs = endDate ? (endDate.length <= 10 ? new Date(`${endDate}T23:59:59.999Z`).getTime() : new Date(endDate).getTime()) : null;
 
-    // 3. Candidate Generation
-    const candidateK = Math.max(finalTopK * 8, 60);
-    const semanticHits = svc.semantic.search(queryVector, candidateK);
-    const lexicalHits = svc.lexical.search(semanticQuery, candidateK);
-
-    const candidates = new Map();
+    const matchesFilters = (m) => {
+      if (!m) return false;
+      if (selectedParticipants && !selectedParticipants.has(m.sender.toLowerCase())) {
+        return false;
+      }
+      if (conversationId && conversationId !== 'all' && m.conversation_id !== conversationId) {
+        return false;
+      }
+      if (filterStartMs || filterEndMs) {
+        const t = new Date(m.timestamp).getTime();
+        if (filterStartMs && t < filterStartMs) return false;
+        if (filterEndMs && t > filterEndMs) return false;
+      }
+      return true;
+    };
 
     const isValidCandidate = (m) => {
       if (!m) return false;
       if (m.message_type === 'system' || m.message_type === 'reaction') return false;
       if (m.text && (m.text.includes('left the group') || m.text.includes('joined the group'))) return false;
-      return true;
+      return matchesFilters(m);
     };
 
-    for (const [msgId, score] of semanticHits) {
-      const msg = svc.messagesById.get(msgId);
-      if (!isValidCandidate(msg)) continue;
-      candidates.set(msgId, {
-        text: msg.text,
-        sender: msg.sender,
-        timestamp: msg.timestamp,
-        conversation_id: msg.conversation_id,
-        semantic: score,
-        lexical: 0.0
-      });
-    }
+    // 2. Query Parsing
+    const parsed = effectiveQuery
+      ? parseQuery(effectiveQuery, config.referenceDate)
+      : { person: null, timeRange: null, semanticQuery: '', queryType: 'semantic' };
+    const { person, timeRange, semanticQuery, queryType } = parsed;
 
-    for (const [msgId, score] of lexicalHits) {
-      const existing = candidates.get(msgId);
-      if (existing) {
-        existing.lexical = score;
-      } else {
+    // 3. Candidate Generation
+    const candidates = new Map();
+
+    if (effectiveQuery) {
+      const queryVector = await svc.embedQuery(semanticQuery || effectiveQuery);
+      const candidateK = Math.max(finalTopK * 8, 80);
+      const semanticHits = svc.semantic.search(queryVector, candidateK);
+      const lexicalHits = svc.lexical.search(semanticQuery || effectiveQuery, candidateK);
+
+      for (const [msgId, score] of semanticHits) {
         const msg = svc.messagesById.get(msgId);
         if (!isValidCandidate(msg)) continue;
         candidates.set(msgId, {
@@ -67,9 +87,68 @@ router.post('/search', async (req, res) => {
           sender: msg.sender,
           timestamp: msg.timestamp,
           conversation_id: msg.conversation_id,
-          semantic: 0.0,
-          lexical: score
+          semantic: score,
+          lexical: 0.0
         });
+      }
+
+      for (const [msgId, score] of lexicalHits) {
+        const existing = candidates.get(msgId);
+        if (existing) {
+          existing.lexical = score;
+        } else {
+          const msg = svc.messagesById.get(msgId);
+          if (!isValidCandidate(msg)) continue;
+          candidates.set(msgId, {
+            text: msg.text,
+            sender: msg.sender,
+            timestamp: msg.timestamp,
+            conversation_id: msg.conversation_id,
+            semantic: 0.0,
+            lexical: score
+          });
+        }
+      }
+
+      // When faceted filters are active, compute true semantic scores across matching candidates
+      if (hasFilters) {
+        for (const msg of svc.messages) {
+          if (!candidates.has(msg.id) && isValidCandidate(msg)) {
+            const midIdx = svc.semantic.messageIds.indexOf(msg.id);
+            let dot = 0.0;
+            if (midIdx >= 0) {
+              const off = midIdx * 384;
+              for (let d = 0; d < 384; d++) {
+                dot += svc.semantic.embeddings[off + d] * queryVector[d];
+              }
+            }
+            if (dot > 0.15) {
+              candidates.set(msg.id, {
+                text: msg.text,
+                sender: msg.sender,
+                timestamp: msg.timestamp,
+                conversation_id: msg.conversation_id,
+                semantic: Math.max(0, Number(dot.toFixed(4))),
+                lexical: 0.0
+              });
+            }
+          }
+        }
+      }
+    } else {
+      // Empty query with active filters: surface top decision / recent messages in filter
+      for (const msg of svc.messages) {
+        if (isValidCandidate(msg)) {
+          candidates.set(msg.id, {
+            text: msg.text,
+            sender: msg.sender,
+            timestamp: msg.timestamp,
+            conversation_id: msg.conversation_id,
+            semantic: 0.2,
+            lexical: 0.0
+          });
+          if (candidates.size >= 150) break;
+        }
       }
     }
 
@@ -202,6 +281,65 @@ router.get('/thread/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('[API /thread Error]', err);
+    return res.status(500).json({ detail: err.message || 'Internal server error' });
+  }
+});
+
+router.get('/filters', async (req, res) => {
+  try {
+    const svc = IndexService.get();
+    if (!svc.isLoaded) {
+      await svc.load();
+    }
+
+    const participantCounts = {};
+    const conversationCounts = {};
+    let minDate = null;
+    let maxDate = null;
+
+    const topicLabels = {
+      trip_manali: 'Trip to Manali',
+      birthday_restaurant: "Sneha's Birthday",
+      project_techstack: 'Project Tech Stack',
+      general: 'General Chat'
+    };
+
+    for (const msg of svc.messages) {
+      if (msg.message_type !== 'text') continue;
+      if (msg.sender) {
+        participantCounts[msg.sender] = (participantCounts[msg.sender] || 0) + 1;
+      }
+      const cid = msg.conversation_id || 'general';
+      conversationCounts[cid] = (conversationCounts[cid] || 0) + 1;
+
+      if (msg.timestamp) {
+        if (!minDate || msg.timestamp < minDate) minDate = msg.timestamp;
+        if (!maxDate || msg.timestamp > maxDate) maxDate = msg.timestamp;
+      }
+    }
+
+    const participants = Object.entries(participantCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const conversations = Object.entries(conversationCounts)
+      .map(([id, count]) => ({
+        id,
+        label: topicLabels[id] || id,
+        count
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    return res.json({
+      participants,
+      conversations,
+      dateRange: {
+        minDate: minDate ? minDate.slice(0, 10) : '2026-03-01',
+        maxDate: maxDate ? maxDate.slice(0, 10) : '2026-08-31'
+      }
+    });
+  } catch (err) {
+    console.error('[API /filters Error]', err);
     return res.status(500).json({ detail: err.message || 'Internal server error' });
   }
 });

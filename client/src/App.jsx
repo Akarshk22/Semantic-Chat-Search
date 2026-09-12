@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import SearchBox from './components/SearchBox'
 import ResultCard from './components/ResultCard'
 import ExampleQueries from './components/ExampleQueries'
+import FilterBar from './components/FilterBar'
 import {
   SunIcon,
   MoonIcon,
@@ -13,7 +14,7 @@ import {
 } from './components/Icons'
 import './App.css'
 
-import { searchArchive } from './services/api'
+import { searchArchive, fetchFilterMeta } from './services/api'
 
 const EXAMPLE_QUERIES = [
   'When did we decide on the trip?',
@@ -38,23 +39,43 @@ export default function App() {
   const [currentQuery, setCurrentQuery] = useState('')
   const [searched, setSearched] = useState(false)
 
+  const [filters, setFilters] = useState({
+    participants: [],
+    conversationId: null,
+    startDate: null,
+    endDate: null,
+  })
+  const [filterMeta, setFilterMeta] = useState(null)
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('chat_search_theme', theme)
   }, [theme])
 
+  useEffect(() => {
+    fetchFilterMeta()
+      .then(data => setFilterMeta(data))
+      .catch(() => {})
+  }, [])
+
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
   }
 
-  const handleSearch = async (query) => {
-    if (!query.trim()) return
+  const handleSearch = async (query = currentQuery, activeFilters = filters) => {
+    const hasActiveFilters = (activeFilters.participants && activeFilters.participants.length > 0) ||
+      Boolean(activeFilters.conversationId) ||
+      Boolean(activeFilters.startDate) ||
+      Boolean(activeFilters.endDate)
+
+    if (!query.trim() && !hasActiveFilters) return
+
     setLoading(true)
     setError(null)
     setCurrentQuery(query)
     setSearched(true)
     try {
-      const data = await searchArchive(query, 5)
+      const data = await searchArchive(query, 5, activeFilters)
       setResults(data.results || [])
       setInterpretation(data.interpretation || null)
       setSearchMeta({
@@ -66,6 +87,19 @@ export default function App() {
       setResults([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters)
+    // If a search was already made or there are active filters, run search with new filters
+    const hasActive = (newFilters.participants && newFilters.participants.length > 0) ||
+      Boolean(newFilters.conversationId) ||
+      Boolean(newFilters.startDate) ||
+      Boolean(newFilters.endDate)
+
+    if (searched || currentQuery.trim() || hasActive) {
+      handleSearch(currentQuery, newFilters)
     }
   }
 
@@ -118,6 +152,12 @@ export default function App() {
           </div>
 
           <SearchBox onSearch={handleSearch} loading={loading} initialQuery={currentQuery} />
+
+          <FilterBar
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            filterMeta={filterMeta}
+          />
 
           {!searched && !loading && (
             <ExampleQueries queries={EXAMPLE_QUERIES} onSelect={handleSearch} />
