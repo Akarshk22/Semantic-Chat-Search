@@ -1,0 +1,22 @@
+# Core backend
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+
+# Embeddings
+sentence-transformers
+
+# Vector search (NumPy is the default; FAISS is optional)
+numpy
+# faiss-cpu  # Uncomment if you have Python ≤3.12 and want FAISS acceleration
+
+# Lexical search
+rank-bm25
+
+# Data
+python-dateutil
+
+# Dev / test
+httpx

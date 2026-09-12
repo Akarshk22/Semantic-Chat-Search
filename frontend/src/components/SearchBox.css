@@ -1,0 +1,115 @@
+.search-box-form {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.search-input-shell {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-input-shell:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-blue-bg), var(--shadow-sm);
+}
+
+.search-lead-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.search-field {
+  width: 100%;
+  height: 46px;
+  padding: 0 40px 0 42px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14.5px;
+  color: var(--text-primary);
+}
+
+.search-field::placeholder {
+  color: var(--text-faint);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  border: none;
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.search-clear-btn:hover {
+  background: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.search-submit-btn {
+  height: 46px;
+  padding: 0 22px;
+  background: var(--accent-primary);
+  color: var(--accent-primary-text);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.15s, transform 0.1s, opacity 0.15s;
+}
+
+.search-submit-btn:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+}
+
+.search-submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.search-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.search-loading-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-spin-dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+[data-theme="dark"] .search-spin-dot {
+  border-color: rgba(15, 23, 42, 0.3);
+  border-top-color: var(--accent-primary-text);
+}
