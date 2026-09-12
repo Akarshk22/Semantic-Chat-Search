@@ -17,14 +17,16 @@ import './App.css'
 import { searchArchive, fetchFilterMeta } from './services/api'
 
 const EXAMPLE_QUERIES = [
-  'When did we decide on the trip?',
-  'Where did everyone finally agree to go?',
-  'What did Priya say about the budget?',
-  'What did we discuss last month?',
-  'How was the group planning to travel to the hills?',
-  'What framework did the team ultimately adopt?',
-  'Where was Sneha\'s birthday celebrated?',
-  'Who was worried about spending too much?',
+  { text: 'How was the group planning to travel to the hills?', tag: 'Zero-overlap' },
+  { text: 'When was the mountain getaway confirmed?', tag: 'Zero-overlap' },
+  { text: 'Where was Sneha\'s birthday celebration held?', tag: 'Zero-overlap' },
+  { text: 'What technology framework was chosen by the development team?', tag: 'Zero-overlap' },
+  { text: 'Who was concerned about exceeding the spending limit?', tag: 'Zero-overlap' },
+  { text: 'Why was the riverside destination scrapped from consideration?', tag: 'Zero-overlap' },
+  { text: 'What was Priya\'s budget limit?', tag: 'Budget' },
+  { text: 'Which hotel was booked for the Manali trip?', tag: 'Trip' },
+  { text: 'Which restaurant was chosen for the birthday dinner?', tag: 'Dinner' },
+  { text: 'What did Rahul say about the mountain trip in August?', tag: 'Person' },
 ]
 
 export default function App() {
@@ -153,15 +155,19 @@ export default function App() {
 
           <SearchBox onSearch={handleSearch} loading={loading} initialQuery={currentQuery} />
 
+          {/* ── Suggestion Panel ─────────────────────────────────── */}
+          <ExampleQueries
+            queries={EXAMPLE_QUERIES}
+            onSelect={(q) => handleSearch(q, filters)}
+            activeQuery={currentQuery}
+          />
+
+          {/* ── Faceted Filter Bar ─────────────────────────────── */}
           <FilterBar
             filters={filters}
             onFilterChange={handleFilterChange}
             filterMeta={filterMeta}
           />
-
-          {!searched && !loading && (
-            <ExampleQueries queries={EXAMPLE_QUERIES} onSelect={handleSearch} />
-          )}
         </section>
 
         {/* ── Loading Skeleton / Indicator ──────────────────────── */}

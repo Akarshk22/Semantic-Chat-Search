@@ -1,12 +1,19 @@
 .examples-wrapper {
-  margin-top: 18px;
+  margin-top: 14px;
+  margin-bottom: 6px;
 }
 
 .examples-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.examples-header-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   color: var(--text-muted);
 }
 
@@ -15,28 +22,54 @@
 }
 
 .examples-title {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.examples-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+  color: var(--text-muted);
+}
+
+.examples-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 11.5px;
+  color: var(--accent-blue);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.examples-toggle-btn:hover {
+  text-decoration: underline;
+  background: var(--accent-blue-bg);
 }
 
 .examples-pill-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .example-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 13px;
+  padding: 6px 12px;
   background: var(--chip-bg);
   border: 1px solid var(--chip-border);
   border-radius: 8px;
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-secondary);
   cursor: pointer;
   box-shadow: var(--shadow-xs);
@@ -51,6 +84,13 @@
   transform: translateY(-1px);
 }
 
+.example-pill-active {
+  background: var(--accent-blue-bg);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  font-weight: 500;
+}
+
 .example-pill-hard {
   border-color: var(--accent-blue-border);
 }
@@ -60,22 +100,32 @@
 }
 
 .pill-badge {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
-  background: var(--accent-blue-bg);
-  color: var(--accent-blue);
   line-height: 1.3;
 }
 
+.pill-badge-hard {
+  background: var(--accent-blue-bg);
+  color: var(--accent-blue);
+}
+
+.pill-badge-default {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+  color: var(--text-muted);
+}
+
 .examples-footnote {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-muted);
   line-height: 1.5;
+  margin-top: 4px;
 }
 
 .examples-footnote strong {
   color: var(--text-secondary);
   font-weight: 600;
 }
+
