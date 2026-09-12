@@ -3,9 +3,12 @@
  */
 
 const HINGLISH_STOPWORDS = new Set([
-  // English
+  // English grammatical
   "a", "an", "the", "and", "or", "in", "on", "at", "to", "for", "with",
   "is", "was", "are", "were", "it", "this", "that", "of", "by", "as",
+  // Conversational meta-words (avoid matching system events and boilerplate)
+  "group", "chat", "channel", "message", "messages", "conversation", "thread",
+  "talk", "talking", "discuss", "discussed", "discussing", "say", "said",
   // Romanized Hindi / Hinglish stopwords
   "hai", "hain", "ko", "se", "ke", "ka", "ki", "aur", "bhi", "toh",
   "karo", "kare", "karna", "tha", "thi", "the", "ho", "me", "mein",

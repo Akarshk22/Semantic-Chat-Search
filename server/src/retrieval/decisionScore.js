@@ -30,18 +30,26 @@ const DECISION_PHRASES = [
   "final karte",
   "kar lete",
   "kar liya",
+  "le lete",
+  "le lete hain",
   "ho gaya",
   "haan bhai",
   "chal",
   "chalo",
-  "toh",
   "theek hai",
-  "bas",
   "set hai",
   "done hai",
   "confirmed hai",
   "reservation",
-  "book"
+  "book",
+  // Rejection / scrapping decisions
+  "drop karo",
+  "drop kiya",
+  "avoid karo",
+  "chhodo",
+  "cancelled",
+  "bilkul nahi",
+  "se zyada nahi"
 ];
 
 // Sort by length descending for regex matching

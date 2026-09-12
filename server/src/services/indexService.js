@@ -72,10 +72,16 @@ export class IndexService {
     console.log(`[IndexService] Loaded vector matrix with ${messageIds.length} embeddings.`);
     this.semantic = new SemanticSearchEngine(rawFloats, messageIds, 384);
 
-    // 3. Initialize BM25 Lexical Engine
+    // 3. Initialize BM25 Lexical Engine (excluding system events and reactions)
     const documents = messageIds.map(id => {
       const msg = this.messagesById.get(id);
-      return msg ? msg.text : '';
+      if (!msg || msg.message_type === 'system' || msg.message_type === 'reaction') {
+        return '';
+      }
+      if (msg.text.includes('left the group') || msg.text.includes('joined the group')) {
+        return '';
+      }
+      return msg.text;
     });
     this.lexical = new LexicalSearchEngine(documents, messageIds);
     console.log('[IndexService] BM25 inverted index initialized.');

@@ -35,9 +35,16 @@ router.post('/search', async (req, res) => {
 
     const candidates = new Map();
 
+    const isValidCandidate = (m) => {
+      if (!m) return false;
+      if (m.message_type === 'system' || m.message_type === 'reaction') return false;
+      if (m.text && (m.text.includes('left the group') || m.text.includes('joined the group'))) return false;
+      return true;
+    };
+
     for (const [msgId, score] of semanticHits) {
       const msg = svc.messagesById.get(msgId);
-      if (!msg) continue;
+      if (!isValidCandidate(msg)) continue;
       candidates.set(msgId, {
         text: msg.text,
         sender: msg.sender,
@@ -54,7 +61,7 @@ router.post('/search', async (req, res) => {
         existing.lexical = score;
       } else {
         const msg = svc.messagesById.get(msgId);
-        if (!msg) continue;
+        if (!isValidCandidate(msg)) continue;
         candidates.set(msgId, {
           text: msg.text,
           sender: msg.sender,

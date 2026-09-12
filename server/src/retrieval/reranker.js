@@ -23,31 +23,40 @@ export class Reranker {
   }
 
   _getWeights(queryType) {
-    const w = { ...this.baseWeights };
     if (queryType === 'person') {
-      const boost = 0.15;
-      w.person += boost;
-      w.semantic -= boost * 0.5;
-      w.temporal -= boost * 0.5;
+      return {
+        semantic: 0.30,
+        lexical: 0.10,
+        person: 0.40,
+        temporal: 0.0,
+        decision: 0.20
+      };
     } else if (queryType === 'time') {
-      const boost = 0.15;
-      w.temporal += boost;
-      w.semantic -= boost * 0.5;
-      w.person -= boost * 0.5;
+      return {
+        semantic: 0.20,
+        lexical: 0.10,
+        person: 0.0,
+        temporal: 0.45,
+        decision: 0.25
+      };
     } else if (queryType === 'mixed') {
-      w.person += 0.08;
-      w.temporal += 0.08;
-      w.semantic -= 0.10;
-      w.lexical -= 0.03;
-      w.decision -= 0.03;
+      return {
+        semantic: 0.25,
+        lexical: 0.10,
+        person: 0.30,
+        temporal: 0.25,
+        decision: 0.10
+      };
     }
 
-    const total = Object.values(w).reduce((acc, v) => acc + v, 0);
-    const normalized = {};
-    for (const [k, v] of Object.entries(w)) {
-      normalized[k] = Math.max(0.0, v / total);
-    }
-    return normalized;
+    // Default semantic
+    return {
+      semantic: 0.50,
+      lexical: 0.15,
+      person: 0.0,
+      temporal: 0.05,
+      decision: 0.30
+    };
   }
 
   _dedupByConversation(ranked, maxPerConv = 2) {
@@ -70,12 +79,8 @@ export class Reranker {
 
     const result = [...noConv];
     for (const [, items] of convGroups.entries()) {
-      // Within the conversation, prefer decision messages first, then composite score
-      items.sort((a, b) => {
-        const decDiff = b.signals.decision - a.signals.decision;
-        if (Math.abs(decDiff) > 0.05) return decDiff;
-        return b.score - a.score;
-      });
+      // Sort within the conversation by composite score
+      items.sort((a, b) => b.score - a.score);
       result.push(...items.slice(0, maxPerConv));
     }
 
@@ -102,6 +107,9 @@ export class Reranker {
 
       // 1. Semantic score
       let sem = Number(info.semantic || 0.0);
+      if (text.trim().endsWith('?')) {
+        sem *= 0.88;
+      }
 
       // 2. Lexical score
       const lex = Number(info.lexical || 0.0);
@@ -119,6 +127,11 @@ export class Reranker {
       let temp = 0.0;
       if (timeRange && ts && !isNaN(ts.getTime())) {
         temp = temporalScore(ts, timeRange.start, timeRange.end);
+        if (queryType === 'time' && temp < 0.2) {
+          sem *= 0.1;
+        }
+      } else if (timeRange && queryType === 'time') {
+        sem *= 0.1;
       }
 
       // 5. Decision score
@@ -153,8 +166,8 @@ export class Reranker {
 
     results.sort((a, b) => b.score - a.score);
 
-    // Deduplicate near-identical conversation flooding
-    const maxPerConv = (queryType === 'person' || queryType === 'time') ? 4 : 2;
+    // Allow top results from relevant conversation threads
+    const maxPerConv = 5;
     return this._dedupByConversation(results, maxPerConv);
   }
 }
