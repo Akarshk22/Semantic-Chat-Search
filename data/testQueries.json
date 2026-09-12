@@ -1,0 +1,291 @@
+[
+  {
+    "query_id": "q01",
+    "query": "Where did everyone finally agree to go?",
+    "answer_message_id": "msg_D001",
+    "category": "semantic",
+    "hard": true,
+    "note": "Zero overlap: {where,did,everyone,finally,agree,to,go} vs {haan,bhai,Manali,final,karte,hain,18th,ko,nikalte}"
+  },
+  {
+    "query_id": "q02",
+    "query": "When was the mountain getaway confirmed?",
+    "answer_message_id": "msg_D002",
+    "category": "semantic",
+    "hard": true,
+    "note": "Zero overlap: {when,was,the,mountain,getaway,confirmed} vs {18th,August,se,22nd,4,raat,ka,plan,pakka,karte,hain}"
+  },
+  {
+    "query_id": "q03",
+    "query": "How was the group planning to travel to the hills?",
+    "answer_message_id": "msg_D003",
+    "category": "semantic",
+    "hard": true,
+    "note": "Zero overlap: {how,was,the,group,planning,to,travel,to,the,hills} vs {overnight,Volvo,bus,le,lete,hain,1400,per,head,aayega,AC,comfortable}"
+  },
+  {
+    "query_id": "q04",
+    "query": "Where was Sneha's birthday celebration held?",
+    "answer_message_id": "msg_D006",
+    "category": "semantic",
+    "hard": true,
+    "note": "Zero overlap: {where,was,Sneha's,birthday,celebration,held} vs {Pyaar,restaurant,confirm,hai,Saturday,8,baje,reservation,fix}"
+  },
+  {
+    "query_id": "q05",
+    "query": "What technology framework was chosen by the development team?",
+    "answer_message_id": "msg_D008",
+    "category": "semantic",
+    "hard": true,
+    "note": "Zero overlap: {what,technology,framework,was,chosen,by,the,development,team} vs {React,aur,Node,final,client,ne,bhi,approve,kar,diya,shuru,karte,hain}"
+  },
+  {
+    "query_id": "q06",
+    "query": "Who was concerned about exceeding the spending limit?",
+    "answer_message_id": "msg_D010",
+    "category": "semantic",
+    "hard": true,
+    "note": "Zero overlap: {who,was,concerned,about,exceeding,the,spending,limit} vs {yaar,15k,se,zyada,nahi,ho,sakta,seedha,bol,deta,hoon,tight,hai,wallet}"
+  },
+  {
+    "query_id": "q07",
+    "query": "Why was the riverside destination scrapped from consideration?",
+    "answer_message_id": "msg_D011",
+    "category": "semantic",
+    "hard": true,
+    "note": "Zero overlap: {why,was,the,riverside,destination,scrapped,from,consideration} vs {Rishikesh,idea,drop,karo,last,time,bahut,crowded,tha,aur,ganda,bhi}"
+  },
+  {
+    "query_id": "q08",
+    "query": "What coding tool was the engineering group moving away from?",
+    "answer_message_id": "msg_D013",
+    "category": "semantic",
+    "hard": true,
+    "note": "Zero overlap: {what,coding,tool,was,the,engineering,group,moving,away,from} vs {Vue,chhodo,yaar,team,mein,koi,jaanta,nahi,theek,se,unnecessary,risk}"
+  },
+  {
+    "query_id": "q09",
+    "query": "When is the trip to Manali?",
+    "answer_message_id": "msg_D002",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q10",
+    "query": "Which hotel was booked for the Manali trip?",
+    "answer_message_id": "msg_D004",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q11",
+    "query": "What is the per person budget for the trip?",
+    "answer_message_id": "msg_D005",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q12",
+    "query": "Which restaurant was chosen for the birthday dinner?",
+    "answer_message_id": "msg_D006",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q13",
+    "query": "Who booked the table at the restaurant?",
+    "answer_message_id": "msg_D007",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q14",
+    "query": "What is the project deadline?",
+    "answer_message_id": "msg_D009",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q15",
+    "query": "Was Goa considered for the trip? Why not?",
+    "answer_message_id": "msg_D012",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q16",
+    "query": "Why did they reject Angular for the project?",
+    "answer_message_id": "msg_D015",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q17",
+    "query": "What transport did they choose for Manali?",
+    "answer_message_id": "msg_D003",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q18",
+    "query": "Was Olive Garden considered for the birthday?",
+    "answer_message_id": "msg_D014",
+    "category": "semantic",
+    "hard": false
+  },
+  {
+    "query_id": "q19",
+    "query": "What did Priya say about the budget?",
+    "answer_message_id": "msg_D005",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q20",
+    "query": "What was Rahul's decision about the trip?",
+    "answer_message_id": "msg_D001",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q21",
+    "query": "What did Vikas suggest about accommodation?",
+    "answer_message_id": "msg_D004",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q22",
+    "query": "What did Ankit say about transport?",
+    "answer_message_id": "msg_D003",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q23",
+    "query": "What was Neha's concern about money?",
+    "answer_message_id": "msg_D010",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q24",
+    "query": "What did Karan decide about the tech stack?",
+    "answer_message_id": "msg_D008",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q25",
+    "query": "What did Meera say about the project timeline?",
+    "answer_message_id": "msg_D009",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q26",
+    "query": "What did Sneha book for her birthday?",
+    "answer_message_id": "msg_D007",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q27",
+    "query": "What did we discuss in May?",
+    "answer_message_id": "msg_D011",
+    "category": "time",
+    "hard": false
+  },
+  {
+    "query_id": "q28",
+    "query": "What happened around July regarding the restaurant?",
+    "answer_message_id": "msg_D006",
+    "category": "time",
+    "hard": false
+  },
+  {
+    "query_id": "q29",
+    "query": "What did we discuss last month?",
+    "answer_message_id": "msg_D001",
+    "category": "time",
+    "hard": false,
+    "note": "Reference date 2026-09-12, last month = August 2026"
+  },
+  {
+    "query_id": "q30",
+    "query": "What was planned in August?",
+    "answer_message_id": "msg_D001",
+    "category": "time",
+    "hard": false
+  },
+  {
+    "query_id": "q31",
+    "query": "What were we talking about in April?",
+    "answer_message_id": "msg_D015",
+    "category": "time",
+    "hard": false
+  },
+  {
+    "query_id": "q32",
+    "query": "What was discussed around the second week of June?",
+    "answer_message_id": "msg_D006",
+    "category": "time",
+    "hard": false
+  },
+  {
+    "query_id": "q33",
+    "query": "What did we talk about in summer?",
+    "answer_message_id": "msg_D001",
+    "category": "time",
+    "hard": false
+  },
+  {
+    "query_id": "q34",
+    "query": "What was decided earlier this year regarding work?",
+    "answer_message_id": "msg_D008",
+    "category": "time",
+    "hard": false
+  },
+  {
+    "query_id": "q35",
+    "query": "What did Priya say in July?",
+    "answer_message_id": "msg_D006",
+    "category": "mixed",
+    "hard": false
+  },
+  {
+    "query_id": "q36",
+    "query": "What was Rahul saying in August about the trip?",
+    "answer_message_id": "msg_D001",
+    "category": "mixed",
+    "hard": false
+  },
+  {
+    "query_id": "q37",
+    "query": "What did Vikas mention about cost during the planning?",
+    "answer_message_id": "msg_D004",
+    "category": "mixed",
+    "hard": false
+  },
+  {
+    "query_id": "q38",
+    "query": "What did Ankit say about Goa?",
+    "answer_message_id": "msg_D012",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q39",
+    "query": "What was Karan's view on the project tools?",
+    "answer_message_id": "msg_D015",
+    "category": "person",
+    "hard": false
+  },
+  {
+    "query_id": "q40",
+    "query": "What was discussed about the birthday venue?",
+    "answer_message_id": "msg_D006",
+    "category": "semantic",
+    "hard": false
+  }
+]
